@@ -39,7 +39,7 @@ function processResponse(response) {
     if (headers['path'] === '/') {
         return createServerResponse(200, 'OK');
     } else if (headers['path'].startsWith('/echo')) {
-        serverResponseBody = headers['path'].slice(5);
+        serverResponseBody = headers['path'].slice(5).trim();
         headersDict = {'Content-Type':'text/plain', 'Content-Length': serverResponseBody.length};
         return createServerResponse(200, 'OK', headersDict, serverResponseBody);
     }
