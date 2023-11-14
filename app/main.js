@@ -1,12 +1,14 @@
 const net = require("net");
 
+const END_LINE = '\r\n';
+const END_HEADERS = END_LINE + END_LINE
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
 function parseResponse(response) {
     // returns the headers and body content from the raw client response
-    let [before_body, body] = response.split('\r\n\r\n');
-    const [request_line, ...headers] = before_body.split('\r\n');
+    let [before_body, body] = response.split(END_HEADERS);
+    const [request_line, ...headers] = before_body.split(END_LINE);
     const [method, path,protocol] = request_line.split(' ');
     let headers_dict = {}
     headers.forEach(e => {
@@ -20,13 +22,29 @@ function parseResponse(response) {
     return [headers_dict, body];
 }
 
+function createServerResponse(statusCode, statusMsg, headersDict={}, body='') {
+    const request_line = `HTTP/1.1 ${statusCode} ${statusMsg}`;
+    let headers = '';
+    if (Object.keys(headersDict).length !== 0) { 
+        headers = Object.entries(headersDict).map(([key, value]) => {
+            return `${key}: ${value}`;
+        }).join(END_LINE);
+    }
+    return request_line + END_LINE + headers + END_HEADERS + body;
+}
+
 function processResponse(response) {
     // deals with the logic of what the server should answer to the client
     const [headers, body] = parseResponse(response);
     if (headers['path'] === '/') {
-        return 'HTTP/1.1 200 OK\r\n\r\n';
-    } else {
-        return 'HTTP/1.1 404 Not Found\r\n\r\n';
+        return createServerResponse(200, 'OK');
+    } else if (headers['path'].startsWith('/echo')) {
+        serverResponseBody = headers['path'].slice(5);
+        headersDict = {'Content-Type':'text/plain', 'Content-Length': serverResponseBody.length};
+        return createServerResponse(200, 'OK', headersDict, serverResponseBody);
+    }
+    else {
+        return createServerResponse(404, 'Not Found');
     }
 }
 
