@@ -19,7 +19,6 @@ function getDirectoryFromArgs() {
 
 async function getFileContent(file_name) {
     const full_path = path.join(DIRECTORY, file_name);
-    let returnArr = [];
     const data = await fs.promises.readFile(full_path);
     // to test the non blocking behavior of Node uncomment the line below
     // and try other requests while awaiting for the file
@@ -56,9 +55,7 @@ function createServerResponse(statusCode, statusMsg, headersDict={}, body='') {
     return request_line + END_LINE + headers + END_HEADERS + body;
 }
 
-async function processResponse(response) {
-    // deals with the logic of what the server should answer to the client
-    const [headers, body] = parseResponse(response);
+async function processGetRequest(headers, body) {
     if (headers['path'] === '/') {
         return createServerResponse(200, 'OK');
     } else if (headers['path'].startsWith('/echo')) {
@@ -77,10 +74,39 @@ async function processResponse(response) {
         } catch {
             return createServerResponse(404, 'Not Found');
         }
-    }
-    else {
+    } else {
         return createServerResponse(404, 'Not Found');
     }
+}
+
+async function processPostRequest(headers, body) {
+    if (headers['path'].startsWith('/files')){
+        const file_name = headers['path'].slice(6).replace(/^\/+/, '');
+        try {
+            await createFile(file_name, body);
+            return createServerResponse(201, 'Created');
+        } catch {
+            return createServerResponse(500, ' Internal Server Error');
+        }
+    } else {
+        return createServerResponse(404, 'Not Found');
+    }
+}
+
+async function createFile(file_name, data) {
+    const full_path = path.join(DIRECTORY, file_name);
+    await fs.promises.writeFile(full_path, data);
+}
+
+async function processResponse(response) {
+    // deals with the logic of what the server should answer to the client
+    const [headers, body] = parseResponse(response);
+    if (headers['method'] === 'GET') {
+        return await processGetRequest(headers, body);
+    } else {
+        return processPostRequest(headers, body);
+    }
+    
 }
 
 // initiates server
