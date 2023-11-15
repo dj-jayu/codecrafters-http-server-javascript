@@ -73,7 +73,7 @@ async function processResponse(response) {
         const file_name = headers['path'].slice(6).replace(/^\/+/, '');
         try {
             const content = await getFileContent(file_name);
-            return createServerResponse(200, 'OK', {'Content-Type': 'application/octect-stream', 'Content-Length': content.length}, content);
+            return createServerResponse(200, 'OK', {'Content-Type': 'application/octet-stream', 'Content-Length': content.length}, content);
         } catch {
             return createServerResponse(404, 'Not Found');
         }
