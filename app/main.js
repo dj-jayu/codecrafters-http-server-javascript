@@ -23,6 +23,7 @@ function parseResponse(response) {
 }
 
 function createServerResponse(statusCode, statusMsg, headersDict={}, body='') {
+    // creates a http response with the specified parameters
     const request_line = `HTTP/1.1 ${statusCode} ${statusMsg}`;
     let headers = '';
     if (Object.keys(headersDict).length !== 0) { 
@@ -40,6 +41,10 @@ function processResponse(response) {
         return createServerResponse(200, 'OK');
     } else if (headers['path'].startsWith('/echo')) {
         serverResponseBody = headers['path'].slice(6);
+        headersDict = {'Content-Type':'text/plain', 'Content-Length': serverResponseBody.length};
+        return createServerResponse(200, 'OK', headersDict, serverResponseBody);
+    } else if (headers['path'].startsWith('/user-agent')) {
+        serverResponseBody = headers['user-agent'];
         headersDict = {'Content-Type':'text/plain', 'Content-Length': serverResponseBody.length};
         return createServerResponse(200, 'OK', headersDict, serverResponseBody);
     }
