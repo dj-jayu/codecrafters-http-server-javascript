@@ -58,7 +58,6 @@ const server = net.createServer(socket => {
     socket.on('close', () => {
         console.log('connection closed');
         socket.end();
-        server.close();
     });
 });
 
@@ -69,6 +68,7 @@ server.on('connection', (stream) => {
         const response = buffer.toString();
         const data_for_client = processResponse(response)
         stream.write(data_for_client);
+        stream.end();
     })
 })
 
